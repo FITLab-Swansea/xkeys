@@ -14,6 +14,27 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+void setBacklight(int index, int state, long handle) {
+
+	/*
+		index: 0-29
+		state: 0 (off), 1, (on), 2 (flash)
+	*/
+
+	unsigned int result;
+	unsigned char buffer[80];
+	memset(buffer, 0, sizeof(buffer));
+	buffer[1]=181; // Command: Index Based Set Backlights (Flash)
+	buffer[2] = index; // Key Index
+	buffer[3] = state;
+
+	result = WriteData(handle, buffer);
+
+	if (result != 0) {
+		printf("Unable to write to Device.");
+	}
+}
+
 
 void print_buf(char *data, int len)
 {
@@ -59,6 +80,8 @@ int main(void)
 		printf("Unable to open device\n");
 		exit(1);
 	}
+
+	setBacklight(2,2,handle);
 	
 	char data[80];
 	while (1) {
