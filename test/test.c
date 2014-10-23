@@ -14,6 +14,26 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+void clearBacklight(int bank, long handle) {
+
+	/* bank: 0 = bank 1, 1 = bank 2
+	*/
+
+	unsigned int result;
+	unsigned char buffer[33];
+	memset(buffer, 0, sizeof(buffer));
+	
+	buffer[1] = 182; // Command: On/off bank of backlights
+	buffer[2] = bank; //
+	buffer[3] = 0;
+
+	result = WriteData(handle, buffer);
+
+	if (result != 0) {
+		printf("Unable to write to Device.");
+	}
+}
+
 void setBacklight(int index, int state, long handle) {
 
 	/*
@@ -22,7 +42,7 @@ void setBacklight(int index, int state, long handle) {
 	*/
 
 	unsigned int result;
-	unsigned char buffer[80];
+	unsigned char buffer[33];
 	memset(buffer, 0, sizeof(buffer));
 	buffer[1]=181; // Command: Index Based Set Backlights (Flash)
 	buffer[2] = index; // Key Index
@@ -33,6 +53,36 @@ void setBacklight(int index, int state, long handle) {
 	if (result != 0) {
 		printf("Unable to write to Device.");
 	}
+}
+
+char bitsToNum(char bits)
+{
+	switch(bits) {
+		case 4: return 3;
+		case 8: return 4;
+		case 16: return 5;
+		case 32: return 6;
+	}	
+	return bits;
+}
+
+int getIndexOfKey(char *data)
+{
+	printf("Char: %d\n",data[4]);
+	if(data[3] > 0)
+		return bitsToNum(data[3])-1;
+
+	if(data[4] > 0)
+		return bitsToNum(data[4])+7;
+
+	if(data[5] > 0 )
+		return bitsToNum(data[5])+15;
+
+	if(data[6] > 0)
+		return bitsToNum(data[6])+23;
+
+	return -1; 
+
 }
 
 
@@ -81,9 +131,11 @@ int main(void)
 		exit(1);
 	}
 
-	setBacklight(2,2,handle);
+	clearBacklight(0,handle);
 	
-	char data[80];
+	char data[33];
+	int index;
+
 	while (1) {
 		
 		unsigned int res = 0;
@@ -101,9 +153,15 @@ int main(void)
 			res = BlockingReadData(handle, data, 20);
 			if (res == 0) {
 				print_buf(data, 33);
+				index = getIndexOfKey(data);
+				printf("Index: %d\n",index);
+				if(index >= 0)
+					setBacklight(index,1,handle);
+
+
 			}
-			else if (res == PIE_HID_READ_INSUFFICIENT_DATA) {
-				printf(".");
+			 else if (res == PIE_HID_READ_INSUFFICIENT_DATA) {
+			//	printf(".");
 				fflush(stdout);
 			}	
 			else {
@@ -111,13 +169,14 @@ int main(void)
 			}
 		}
 		
-		printf("Sleeping\n");
-		#if 1
-		if (res != 0) {
-			//usleep(10*1000); // Sleep 10 milliseconds.
-			sleep(2); // 2 seconds
-		}
-		#endif
+
+		//printf("Sleeping\n");
+		//#if 1
+		//if (res != 0) {
+		//	usleep(10*1000); // Sleep 10 milliseconds.
+		//	sleep(2); // 2 seconds
+		//}
+		//#endif
 		
 		//ClearBuffer(handle);
 		
