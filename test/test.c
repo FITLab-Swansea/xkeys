@@ -68,7 +68,6 @@ char bitsToNum(char bits)
 
 int getIndexOfKey(char *data)
 {
-	printf("Char: %d\n",data[4]);
 	if(data[3] > 0)
 		return bitsToNum(data[3])-1;
 
@@ -84,6 +83,13 @@ int getIndexOfKey(char *data)
 	return -1; 
 
 }
+
+/*
+unsigned int handleDataEvent(unsigned char* pData, unsigned int deviceID, unsigned int error)
+{
+
+	printf("DATA: ",pData[3]);
+}*/
 
 
 void print_buf(char *data, int len)
@@ -131,52 +137,43 @@ int main(void)
 		exit(1);
 	}
 
+
 	clearBacklight(0,handle);
+
+	/*
+	int result = SetDataCallback(handle,handleDataEvent);
+
+	if(result != 0) {
+		printf("Could not set callback.\n");
+	}*/
+
+
 	
 	char data[33];
 	int index;
 
 	while (1) {
+
+		res = BlockingReadData(handle,data,100);
 		
-		unsigned int res = 0;
-/*
-		res  = ReadLast(handle, data);
-		if (res == 0) {
-			printf("LAST: \n");
-			print_buf(data, 33);
-			printf("ENDLAST\n\n");
-		}
-*/
-		//res = 0;
-		
-		//while (res == 0) {
+		while (res == PIE_HID_READ_INSUFFICIENT_DATA) {
 			res = BlockingReadData(handle, data, 100);
-			if (res == 0) {
-				print_buf(data, 33);
+		}
+
+		if (res == 0) {
+			if(data[3] != 0 || data[4] != 0 || data[5] != 0 || data[6] != 0) {
 				index = getIndexOfKey(data);
-				printf("Index: %d\n",index);
 				if(index >= 0)
 					setBacklight(index,1,handle);
-
+				
+				print_buf(data, 33);
+				printf("Index key: %d\n",index);
 
 			}
-			 else if (res == PIE_HID_READ_INSUFFICIENT_DATA) {
-			//	printf(".");
-			//	fflush(stdout);
-			}	
-			else {
-				printf("Error Reading\n");
-			}
-		//}
+		}else{
+				printf("Error reading data\n");
+		}
 		
-
-		//printf("Sleeping\n");
-		//#if 1
-		//if (res != 0) {
-		//	usleep(10*1000); // Sleep 10 milliseconds.
-		//	sleep(2); // 2 seconds
-		//}
-		//#endif
 		
 		//ClearBuffer(handle);
 		
