@@ -139,18 +139,18 @@ int main(void)
 	while (1) {
 		
 		unsigned int res = 0;
-
+/*
 		res  = ReadLast(handle, data);
 		if (res == 0) {
 			printf("LAST: \n");
 			print_buf(data, 33);
 			printf("ENDLAST\n\n");
 		}
-
-		res = 0;
+*/
+		//res = 0;
 		
-		while (res == 0) {
-			res = BlockingReadData(handle, data, 20);
+		//while (res == 0) {
+			res = BlockingReadData(handle, data, 100);
 			if (res == 0) {
 				print_buf(data, 33);
 				index = getIndexOfKey(data);
@@ -162,12 +162,12 @@ int main(void)
 			}
 			 else if (res == PIE_HID_READ_INSUFFICIENT_DATA) {
 			//	printf(".");
-				fflush(stdout);
+			//	fflush(stdout);
 			}	
 			else {
 				printf("Error Reading\n");
 			}
-		}
+		//}
 		
 
 		//printf("Sleeping\n");
